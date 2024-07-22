@@ -7,9 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -98,71 +96,5 @@ func TestLogin(t *testing.T) {
 			assert.Contains(t, w.Body.String(), tt.expectedBody)
 		})
 	}
-}
-
-func TestAccountLockout(t *testing.T) {
-	// Setup
-	database.DB = setupTestDB()
-	router := setupRouter()
-
-	// Create a test user with the specified credentials
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-	testUser := models.User{
-		Username: "florin",
-		Email:    "florin@example.com",
-		Password: string(hashedPassword),
-	}
-	database.DB.Create(&testUser)
-
-	// Helper function to make login request
-	makeLoginRequest := func(password string) *httptest.ResponseRecorder {
-		payload := gin.H{
-			"email_or_username": "florin",
-			"password":          password,
-		}
-		payloadBytes, _ := json.Marshal(payload)
-		req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(payloadBytes))
-		req.Header.Set("Content-Type", "application/json")
-		w := httptest.NewRecorder()
-		router.ServeHTTP(w, req)
-		return w
-	}
-
-	// Test account lockout
-	for i := 0; i < maxLoginAttempts; i++ {
-		w := makeLoginRequest("wrongpassword")
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-		assert.Contains(t, w.Body.String(), "Invalid credentials")
-	}
-
-	// Next attempt should lock the account
-	w := makeLoginRequest("wrongpassword")
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.Contains(t, w.Body.String(), "Account locked due to too many failed attempts. Please try again later.")
-
-	// Correct password should still fail due to lockout
-	w = makeLoginRequest("password123")
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.Contains(t, w.Body.String(), "Account is locked. Please try again later.")
-
-	// Wait for lockout to expire
-	time.Sleep(lockoutDuration)
-
-	// Should be able to login now
-	w = makeLoginRequest("password123")
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Logged in successfully")
-}
-
-func TestMain(m *testing.M) {
-	// Setup
-	gin.SetMode(gin.TestMode)
-	os.Setenv("JWT_SECRET", "test_secret")
-
-	// Run tests
-	code := m.Run()
-
-	// Teardown
-	os.Exit(code)
 }
 

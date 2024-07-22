@@ -6,12 +6,12 @@ import (
 	"UserAuth/internal/middleware"
 	"UserAuth/pkg/utils"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"github.com/markbates/goth/gothic"
 )
+
 func init() {
 	utils.LoadEnv()
 	database.ConnectToDb()
@@ -19,13 +19,7 @@ func init() {
 }
 
 func main() {
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-
+	// set Gin to Release mode
 	gin.SetMode(gin.ReleaseMode)
 
 	// initialize gin
@@ -35,36 +29,35 @@ func main() {
 		panic(err)
 	}
 
+	// Initialize Providers Auth
+	handlers.GoogleAuth()
+	handlers.GithubAuth()
+	r.Use(middleware.GothProvider)
+
 	// Apply general rate limiter to all routes
 	r.Use(middleware.RateLimiter(60, time.Minute)) // 60 requests per minute
 
-	// Apply specific rate limiters to sensitive endpoints
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Welcome to the API"})
-	})
-
 	r.POST(
 		"/login",
-		middleware.RateLimiter(5, time.Minute),
+		middleware.RateLimiter(20, time.Minute),
 		middleware.CheckNotAuthenticated(),
 		handlers.Login,
 	)
 	r.POST(
 		"/register",
-		middleware.RateLimiter(3, time.Minute),
+		middleware.RateLimiter(10, time.Minute),
 		middleware.CheckNotAuthenticated(),
 		handlers.Register,
 	)
 	r.POST(
 		"/reset-request",
-		middleware.RateLimiter(2, time.Minute),
+		middleware.RateLimiter(8, time.Minute),
 		middleware.CheckNotAuthenticated(),
 		handlers.ResetRequest,
 	)
 
 	// Add the remaining routes
 	r.POST("/logout", middleware.CheckAuthenticated(), handlers.Logout)
-	r.POST("/verify-email", handlers.VerifyEmail)
 	r.GET("/protected", middleware.CheckAuthenticated(), handlers.ProtectedRoute)
 	r.POST("/reset-password", middleware.CheckNotAuthenticated(), handlers.ResetPassword)
 	r.GET("/user", middleware.CheckAuthenticated(), handlers.GetCurrentUser)
@@ -72,12 +65,10 @@ func main() {
 	r.GET("/users/:id", middleware.CheckAuthenticated(), handlers.GetUserById)
 	r.PUT("/users/:id", middleware.CheckAuthenticated(), handlers.EditUser)
 	r.DELETE("/users/:id", middleware.CheckAuthenticated(), handlers.DeleteUser)
-
-	// GitHub OAuth routes
-	r.GET("/auth/github", handlers.HandleGitHubLogin)
-	r.GET("/auth/github/callback", handlers.HandleGitHubCallback)
-    r.GET("/auth/google", handlers.GoogleLogin)
-    r.GET("/auth/google/callback", handlers.HandleGitHubCallback)
+	r.GET("/auth/:provider", func(c *gin.Context) {
+		gothic.BeginAuthHandler(c.Writer, c.Request)
+	})
+	r.GET("/auth/:provider/callback", handlers.CallbackHandler)
 
 	// Start the server
 	if err := r.Run(); err != nil {

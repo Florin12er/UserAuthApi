@@ -3,11 +3,10 @@ package handlers
 import (
 	"UserAuth/internal/database"
 	"UserAuth/internal/models"
-	"UserAuth/pkg/utils"
 	"encoding/json"
 	"log"
 	"net/http"
-	"net/url" // Import the net/url package
+	"net/url"
 	"os"
 	"regexp"
 
@@ -60,12 +59,8 @@ func Register(c *gin.Context) {
 		Email:    registerData.Email,
 		Password: string(hashedPassword),
 		UserType: models.TypeMember,
-		IsActive: false, // Set to false until email is verified
+		IsActive: true, // Set to true since email verification is removed
 	}
-
-	// Generate verification code
-	verificationCode := utils.GenerateRandomCode(6) // Implement this function to generate a random 6-digit code
-	user.VerificationCode = verificationCode
 
 	// Save user to database
 	if err := database.DB.Create(&user).Error; err != nil {
@@ -73,13 +68,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Send verification email
-	if err := utils.SendVerificationEmail(user.Email, verificationCode); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send verification email"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Registration successful. Please check your email for verification."})
+	c.JSON(http.StatusOK, gin.H{"message": "Registration successful."})
 }
 
 func verifyTurnstile(response string) bool {

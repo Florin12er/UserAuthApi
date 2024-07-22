@@ -1,85 +1,89 @@
 package handlers
 
 import (
-	"context"
-	"encoding/json"
+	"UserAuth/internal/database"
+	"UserAuth/internal/models"
 	"fmt"
-	"log"
+	"github.com/gorilla/sessions"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/github"
 	"net/http"
 	"os"
-
+	"time"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/github"
 )
 
-var (
-	oauthConf = &oauth2.Config{
-		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8080/auth/github/callback",
-		Scopes:       []string{"user:email"},
-		Endpoint:     github.Endpoint,
-	}
-	oauthStateString = "random"
-)
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
+func GithubAuth() {
+	githubClientId := os.Getenv("GITHUB_CLIENT_ID")
+	githubClientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
+	store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
 
-func HandleGitHubLogin(c *gin.Context) {
-	url := oauthConf.AuthCodeURL(oauthStateString, oauth2.AccessTypeOffline)
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	gothic.Store = store
+	goth.UseProviders(
+		github.New(
+			githubClientId,
+			githubClientSecret,
+			"http://localhost:8080/auth/github/callback",
+		),
+	)
 }
 
-func HandleGitHubCallback(c *gin.Context) {
-	state := c.Query("state")
-	if state != oauthStateString {
-		log.Printf("invalid oauth state, expected '%s', got '%s'\n", oauthStateString, state)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state"})
+func CallbackHandler(c *gin.Context) {
+	provider := c.Param("provider")
+	gothic.GetProviderName = func(*http.Request) (string, error) {
+		return provider, nil
+	}
+
+	user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+	if err != nil {
+		fmt.Printf("Error in CompleteUserAuth: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	code := c.Query("code")
-	token, err := oauthConf.Exchange(context.Background(), code)
-	if err != nil {
-		log.Printf("oauthConf.Exchange() failed with '%s'\n", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to exchange token"})
-		return
-	}
+	var dbUser models.User
+	result := database.DB.Where("email = ?", user.Email).First(&dbUser)
 
-	client := oauthConf.Client(context.Background(), token)
-	email, err := GetGitHubUserEmail(client)
-	if err != nil {
-		log.Printf("Failed to get user email: %s\n", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"email": email})
-}
-
-func GetGitHubUserEmail(client *http.Client) (string, error) {
-	resp, err := client.Get("https://api.github.com/user/emails")
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	var emails []struct {
-		Email string `json:"email"`
-		Primary bool `json:"primary"`
-		Verified bool `json:"verified"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
-		return "", err
-	}
-
-	for _, email := range emails {
-		if email.Primary && email.Verified {
-			return email.Email, nil
+	if result.Error != nil {
+		fmt.Printf("User not found in database, creating new user\n")
+		// If user does not exist, create a new user
+		dbUser = models.User{
+			Username: user.NickName,
+			Email:    user.Email,
+			UserType: models.TypeMember,
+			IsActive: true,
 		}
+		database.DB.Create(&dbUser)
+	} else {
+		fmt.Printf("User found in database: %+v\n", dbUser)
 	}
 
-	return "", fmt.Errorf("no verified primary email found")
-}
+	// Generate JWT
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": dbUser.Username,
+		"email":    dbUser.Email,
+		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+	})
 
+	tokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		fmt.Printf("Error generating token: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	// Set JWT as a cookie
+	c.SetCookie("token", tokenString, 86400*3, "/", "localhost", false, true)
+
+	fmt.Println("Authentication successful, sending response")
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User authenticated successfully",
+		"token":   tokenString,
+	})
+	c.Redirect(http.StatusFound, "/")
+}
