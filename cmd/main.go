@@ -5,11 +5,11 @@ import (
 	"UserAuth/internal/handlers"
 	"UserAuth/internal/middleware"
 	"UserAuth/pkg/utils"
-	"log"
-	"time"
-
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/markbates/goth/gothic"
+	"log"
+	"time"
 )
 
 func init() {
@@ -33,6 +33,12 @@ func main() {
 	handlers.GoogleAuth()
 	handlers.GithubAuth()
 	r.Use(middleware.GothProvider)
+
+	// In your main function, before defining routes
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:5173"} // or whatever your frontend URL is
+	config.AllowCredentials = true
+	r.Use(cors.New(config))
 
 	// Apply general rate limiter to all routes
 	r.Use(middleware.RateLimiter(60, time.Minute)) // 60 requests per minute
