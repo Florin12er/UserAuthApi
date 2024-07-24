@@ -87,7 +87,7 @@ func Login(c *gin.Context) {
 		true,
 	)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Logged in successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": user.Username})
 }
 
 func ProtectedRoute(c *gin.Context) {
