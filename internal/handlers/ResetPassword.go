@@ -3,11 +3,15 @@ package handlers
 import (
 	"UserAuth/internal/database"
 	"UserAuth/internal/models"
+	"UserAuth/pkg/utils"
+	"fmt"
 	"net/http"
 	"time"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
 func ResetPassword(c *gin.Context) {
 	var request struct {
 		Email       string `json:"email" binding:"required,email"`
@@ -35,7 +39,10 @@ func ResetPassword(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.NewPassword), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(request.NewPassword),
+		bcrypt.DefaultCost,
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
@@ -50,7 +57,11 @@ func ResetPassword(c *gin.Context) {
 	resetMutex.Lock()
 	delete(resetCodes, request.Email)
 	resetMutex.Unlock()
+	go func() {
+		if err := utils.SendResetNotification(user.Email); err != nil {
+			fmt.Println("Failed to send email:", err)
+		}
+	}()
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password reset successfully"})
 }
-

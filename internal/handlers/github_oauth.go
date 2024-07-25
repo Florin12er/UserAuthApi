@@ -4,6 +4,8 @@ import (
 	"UserAuth/internal/database"
 	"UserAuth/internal/models"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
@@ -11,8 +13,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
@@ -57,30 +57,39 @@ func CallbackHandler(c *gin.Context) {
 			UserType: models.TypeMember,
 			IsActive: true,
 		}
-		database.DB.Create(&dbUser)
+		if err := database.DB.Create(&dbUser).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+			return
+		}
 	} else {
 		fmt.Printf("User found in database: %+v\n", dbUser)
 	}
 
-	// Generate JWT
-   var user models.User
-
+	// Create the JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
+		"sub": dbUser.ID,
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	})
 
-	tokenString, err := token.SignedString(jwtSecret)
+	// Sign and get the complete encoded token as a string
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		fmt.Printf("Error generating token: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	// Set JWT as a cookie
-	c.SetCookie("token", tokenString, 86400*3, "/", "localhost", false, true)
-	c.SetCookie("user", dbUser.Username, 86400*3, "/", "localhost", false, true)
+	// Set the token as an HTTP-only cookie
+	c.SetCookie(
+		"token",
+		tokenString,
+		3600*24*30, // 30 days
+		"/",
+		"localhost", // Change this to your domain
+		false,       // Set to true if using HTTPS
+		true,
+	)
 
 	fmt.Println("Authentication successful, sending response")
-    c.Redirect(http.StatusFound, "http://localhost:5173/notes")
+	c.Redirect(http.StatusFound, "http://localhost:5173/note")
 }
