@@ -38,7 +38,7 @@ func CallbackHandler(c *gin.Context) {
 		return provider, nil
 	}
 
-	user, err := gothic.CompleteUserAuth(c.Writer, c.Request)
+	usera, err := gothic.CompleteUserAuth(c.Writer, c.Request)
 	if err != nil {
 		fmt.Printf("Error in CompleteUserAuth: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -46,14 +46,14 @@ func CallbackHandler(c *gin.Context) {
 	}
 
 	var dbUser models.User
-	result := database.DB.Where("email = ?", user.Email).First(&dbUser)
+	result := database.DB.Where("email = ?", usera.Email).First(&dbUser)
 
 	if result.Error != nil {
 		fmt.Printf("User not found in database, creating new user\n")
 		// If user does not exist, create a new user
 		dbUser = models.User{
-			Username: user.NickName,
-			Email:    user.Email,
+			Username: usera.NickName,
+			Email:    usera.Email,
 			UserType: models.TypeMember,
 			IsActive: true,
 		}
@@ -63,10 +63,11 @@ func CallbackHandler(c *gin.Context) {
 	}
 
 	// Generate JWT
+   var user models.User
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": dbUser.Username,
-		"email":    dbUser.Email,
-		"exp":      time.Now().Add(time.Hour * 72).Unix(),
+		"sub": user.ID,
+		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	})
 
 	tokenString, err := token.SignedString(jwtSecret)
@@ -78,12 +79,8 @@ func CallbackHandler(c *gin.Context) {
 
 	// Set JWT as a cookie
 	c.SetCookie("token", tokenString, 86400*3, "/", "localhost", false, true)
+	c.SetCookie("user", dbUser.Username, 86400*3, "/", "localhost", false, true)
 
 	fmt.Println("Authentication successful, sending response")
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User authenticated successfully",
-		"token":   tokenString,
-	})
-	c.Redirect(http.StatusFound, "/")
+    c.Redirect(http.StatusFound, "http://localhost:5173/notes")
 }
