@@ -71,7 +71,7 @@ func main() {
 	r.GET("/users/:id", middleware.CheckAuthenticated(), handlers.GetUserById)
 	r.PUT("/users/:id", middleware.CheckAuthenticated(), handlers.EditUser)
 	r.DELETE("/users/:id", middleware.CheckAuthenticated(), handlers.DeleteUser)
-	r.GET("/auth/:provider", func(c *gin.Context) {
+	r.GET("/auth/:provider", middleware.CheckNotAuthenticated(),func(c *gin.Context) {
 		gothic.BeginAuthHandler(c.Writer, c.Request)
 	})
 	r.GET("/auth/:provider/callback", handlers.CallbackHandler)
