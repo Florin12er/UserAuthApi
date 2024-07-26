@@ -83,7 +83,7 @@ func Login(c *gin.Context) {
 		3600*24*30, // 30 days
 		"/",
 		"localhost", // Change this to your domain
-		false,       // Set to true if using HTTPS
+        true,
 		true,
 	)
 

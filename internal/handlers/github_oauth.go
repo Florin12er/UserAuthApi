@@ -86,10 +86,10 @@ func CallbackHandler(c *gin.Context) {
 		3600*24*30, // 30 days
 		"/",
 		"localhost", // Change this to your domain
-		false,       // Set to true if using HTTPS
+		true,       // Set to true if using HTTPS
 		true,
 	)
 
 	fmt.Println("Authentication successful, sending response")
-	c.Redirect(http.StatusFound, "http://localhost:5173/note")
+	c.Redirect(http.StatusFound, os.Getenv("CALLBACK_URL"))
 }
