@@ -82,7 +82,7 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600*24*30, // 30 days
 		"/",
-		"note-taking-dusky.vercel.app", // Change this to your domain
+		"vercel.app", // Change this to your domain
         true,
 		true,
 	)
