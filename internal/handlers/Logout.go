@@ -12,8 +12,8 @@ func Logout(c *gin.Context) {
 		"",
 		-1,
 		"/",
-		"localhost", // Change this to your domain
-		false,       // Set to true if using HTTPS
+		"noteapi-rw35.onrender.com",
+		false, // Set to true if using HTTPS
 		true,
 	)
 	// Clear the user cookie
@@ -22,11 +22,10 @@ func Logout(c *gin.Context) {
 		"",
 		-1,
 		"/",
-		"localhost", // Change this to your domain
-		false,       // Set to true if using HTTPS
+		"noteapi-rw35.onrender.com",
+		false, // Set to true if using HTTPS
 		true,
 	)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
-
