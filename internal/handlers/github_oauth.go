@@ -84,7 +84,7 @@ func CallbackHandler(c *gin.Context) {
         tokenString,
         3600*24*30, // 30 days
         "/",
-        "noteapi-rw35.onrender.com", // Set this to your API domain
+        "", // Set this to your API domain
         true,  // Secure
         true,  // HttpOnly
     )
