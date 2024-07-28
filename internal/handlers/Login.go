@@ -37,7 +37,10 @@ func Login(c *gin.Context) {
 
 	// Check if the account is locked
 	if time.Now().Before(user.LockedUntil) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Account is locked. Please try again later."})
+		c.JSON(
+			http.StatusUnauthorized,
+			gin.H{"error": "Account is locked. Please try again later."},
+		)
 		return
 	}
 
@@ -49,7 +52,12 @@ func Login(c *gin.Context) {
 
 		if user.FailedLoginAttempts >= maxLoginAttempts {
 			user.LockedUntil = time.Now().Add(lockoutDuration)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Account locked due to too many failed attempts. Please try again later."})
+			c.JSON(
+				http.StatusUnauthorized,
+				gin.H{
+					"error": "Account locked due to too many failed attempts. Please try again later.",
+				},
+			)
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		}
@@ -76,18 +84,17 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Set the token as an HTTP-only cookie
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    tokenString,
-		MaxAge:   3600 * 24 * 30, // 30 days
-		Path:     "/",
-		Domain:   "note-taking-dusky.vercel.app",
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	})
-
+	// Set the cookie
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(
+		"token",
+		tokenString,
+		3600*24*30, // 30 days
+		"/",
+		"",   // Leave domain empty to default to the current domain
+		true, // Secure
+		true, // HttpOnly
+	)
 	c.JSON(http.StatusOK, gin.H{"message": user.Username})
 }
 

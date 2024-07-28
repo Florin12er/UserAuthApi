@@ -77,17 +77,17 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	// Set the token as an HTTP-only cookie
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "token",
-		Value:    tokenString,
-		MaxAge:   3600 * 24 * 30,
-		Path:     "/",
-		Domain:   "note-taking-dusky.vercel.app",
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	})
+    // Set the cookie
+    c.SetSameSite(http.SameSiteNoneMode)
+    c.SetCookie(
+        "token",
+        tokenString,
+        3600*24*30, // 30 days
+        "/",
+        "", // Leave domain empty to default to the current domain
+        true,  // Secure
+        true,  // HttpOnly
+    )
 
 	fmt.Println("Authentication successful, sending response")
 	c.Redirect(http.StatusFound, os.Getenv("CALLBACK_URL"))
