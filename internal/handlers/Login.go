@@ -90,7 +90,7 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600*24*30, // 30 days
 		"/",
-		".onrender.com",
+		"userauthapi-i77f.onrender.com",
 		true,
 		true,
 	)
