@@ -35,15 +35,15 @@ func main() {
 	r.Use(middleware.GothProvider)
 
 	// CORS configuration
-	r.Use(cors.New(cors.Config{
+	config := cors.Config{
 		AllowOrigins:     []string{"https://note-taking-dusky.vercel.app"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
+		ExposeHeaders:    []string{"Set-Cookie"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}))
-
+	}
+	r.Use(cors.New(config))
 	// Apply general rate limiter to all routes
 	r.Use(middleware.RateLimiter(60, time.Minute)) // 60 requests per minute
 
