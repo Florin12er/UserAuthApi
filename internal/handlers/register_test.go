@@ -3,7 +3,6 @@ package handlers
 import (
 	"UserAuth/internal/database"
 	"UserAuth/internal/models"
-	"UserAuth/pkg/utils"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -39,13 +38,6 @@ func TestRegister(t *testing.T) {
 	// Setup
 	database.DB = setupTestDBForRegister()
 	router := setupRouterForRegister()
-
-	// Mock the email sending function
-	originalSendEmail := utils.SendVerificationEmail
-	utils.SendVerificationEmailIMpl = func(email, code string) error {
-		return nil
-	}
-	defer func() { utils.SendVerificationEmailIMpl = originalSendEmail }()
 
 	// Set test environment
 	os.Setenv("APP_ENV", "test")

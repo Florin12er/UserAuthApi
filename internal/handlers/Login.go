@@ -37,7 +37,10 @@ func Login(c *gin.Context) {
 
 	// Check if the account is locked
 	if time.Now().Before(user.LockedUntil) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Account is locked. Please try again later."})
+		c.JSON(
+			http.StatusUnauthorized,
+			gin.H{"error": "Account is locked. Please try again later."},
+		)
 		return
 	}
 
@@ -49,7 +52,12 @@ func Login(c *gin.Context) {
 
 		if user.FailedLoginAttempts >= maxLoginAttempts {
 			user.LockedUntil = time.Now().Add(lockoutDuration)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Account locked due to too many failed attempts. Please try again later."})
+			c.JSON(
+				http.StatusUnauthorized,
+				gin.H{
+					"error": "Account locked due to too many failed attempts. Please try again later.",
+				},
+			)
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		}
@@ -82,8 +90,8 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600*24*30, // 30 days
 		"/",
-		"https://note-taking-dusky.vercel.app", // Change this to your domain
-        true,
+		"note-taking-dusky.vercel.app", // Change this to your domain
+		true,
 		true,
 	)
 
@@ -111,4 +119,3 @@ func ProtectedRoute(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Welcome to the protected route!"})
 }
-

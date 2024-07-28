@@ -33,13 +33,24 @@ func CheckAuth(c *gin.Context) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// Check if the token has expired
-		if float64(claims["exp"].(float64)) < float64(time.Now().Unix()) {
-			c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Token has expired"})
+		if exp, ok := claims["exp"].(float64); ok {
+			if float64(time.Now().Unix()) > exp {
+				c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Token has expired"})
+				return
+			}
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Invalid expiration claim"})
 			return
 		}
 
 		// Token is valid
-		c.JSON(http.StatusOK, gin.H{"authenticated": true, "user_id": claims["sub"]})
+		userId, ok := claims["sub"].(float64)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Invalid user ID claim"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"authenticated": true, "user_id": uint(userId)})
 	} else {
 		c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Invalid token claims"})
 	}

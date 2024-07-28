@@ -85,7 +85,7 @@ func CallbackHandler(c *gin.Context) {
 		tokenString,
 		3600*24*30, // 30 days
 		"/",
-		"https://note-taking-dusky.vercel.app", // Change this to your domain
+		"note-taking-dusky.vercel.app",
 		true,
 		true,
 	)
