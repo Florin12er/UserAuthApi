@@ -9,9 +9,10 @@ import (
     "github.com/golang-jwt/jwt/v5"
 )
 
+// CheckAuth verifies the JWT token from the cookie and checks if the user is authenticated.
 func CheckAuth(c *gin.Context) {
     // Get the cookie
-    tokenString, err := c.Cookie("token") 
+    tokenString, err := c.Cookie("token")
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "No authentication token found"})
         return
@@ -44,13 +45,13 @@ func CheckAuth(c *gin.Context) {
         }
 
         // Token is valid
-        userId, ok := claims["sub"].(string) // Changed from float64 to string, assuming you store user ID as string
+        userId, ok := claims["sub"].(float64)
         if !ok {
             c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Invalid user ID claim"})
             return
         }
 
-        c.JSON(http.StatusOK, gin.H{"authenticated": true, "user_id": userId})
+        c.JSON(http.StatusOK, gin.H{"authenticated": true, "user_id": uint(userId)})
     } else {
         c.JSON(http.StatusUnauthorized, gin.H{"authenticated": false, "message": "Invalid token claims"})
     }
