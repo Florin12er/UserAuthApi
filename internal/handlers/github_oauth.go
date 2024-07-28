@@ -15,8 +15,6 @@ import (
 	"time"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
 func GithubAuth() {
 	githubClientId := os.Getenv("GITHUB_CLIENT_ID")
 	githubClientSecret := os.Getenv("GITHUB_CLIENT_SECRET")
@@ -80,15 +78,16 @@ func CallbackHandler(c *gin.Context) {
 	}
 
 	// Set the token as an HTTP-only cookie
-	c.SetCookie(
-		"token",
-		tokenString,
-		3600*24*30, // 30 days
-		"/",
-		"note-taking-dusky.vercel.app",
-		true,
-		true,
-	)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		MaxAge:   3600 * 24 * 30,
+		Path:     "/",
+		Domain:   "note-taking-dusky.vercel.app",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 
 	fmt.Println("Authentication successful, sending response")
 	c.Redirect(http.StatusFound, os.Getenv("CALLBACK_URL"))

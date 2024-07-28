@@ -34,14 +34,14 @@ func main() {
 	handlers.GithubAuth()
 	r.Use(middleware.GothProvider)
 
-	// In your main function, before defining routes
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{
-		"https://note-taking-dusky.vercel.app",
-	} // or whatever your frontend URL is
-	config.AllowCredentials = true
-	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	// CORS configuration
+	config := cors.Config{
+		AllowOrigins:     []string{"https://note-taking-dusky.vercel.app"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
 	r.Use(cors.New(config))
 
 	// Apply general rate limiter to all routes
@@ -86,3 +86,4 @@ func main() {
 		log.Fatalf("failed to run server: %v", err)
 	}
 }
+

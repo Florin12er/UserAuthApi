@@ -85,15 +85,16 @@ func Login(c *gin.Context) {
 	}
 
 	// Set the token as an HTTP-only cookie
-	c.SetCookie(
-		"token",
-		tokenString,
-		3600*24*30, // 30 days
-		"/",
-		"note-taking-dusky.vercel.app", // Change this to your domain
-		true,
-		true,
-	)
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		MaxAge:   3600 * 24 * 30,
+		Path:     "/",
+		Domain:   "note-taking-dusky.vercel.app",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 
 	c.JSON(http.StatusOK, gin.H{"message": user.Username})
 }
