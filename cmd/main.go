@@ -36,14 +36,22 @@ func main() {
 
 	// CORS configuration
 	config := cors.Config{
-		AllowOrigins:     []string{"https://note-taking-dusky.vercel.app"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Set-Cookie"},
+		AllowOrigins: []string{"https://note-taking-dusky.vercel.app"},
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Accept",
+			"Authorization",
+			"X-Requested-With",
+		},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type", "Set-Cookie"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
+
 	r.Use(cors.New(config))
+    r.Use(middleware.SecureCookie())
 	// Apply general rate limiter to all routes
 	r.Use(middleware.RateLimiter(60, time.Minute)) // 60 requests per minute
 

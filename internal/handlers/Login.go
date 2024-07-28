@@ -82,7 +82,7 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600*24*30, // 30 days
 		"/",
-		"", // Change this to your domain
+		".onrender.com", // Change this to your domain
         true,
 		true,
 	)
