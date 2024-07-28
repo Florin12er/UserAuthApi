@@ -91,7 +91,7 @@ func Login(c *gin.Context) {
         tokenString,
         3600*24*30, // 30 days
         "/",
-        "", // Set this to your API domain
+        "noteapi-rw35.onrender.com", // Set this to your API domain
         true,  // Secure
         true,  // HttpOnly
     )
