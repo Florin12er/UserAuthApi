@@ -84,11 +84,11 @@ func CallbackHandler(c *gin.Context) {
         tokenString,
         3600*24*30, // 30 days
         "/",
-        "", // Leave domain empty to default to the current domain
+        "noteapi-rw35.onrender.com", // Set this to your API domain
         true,  // Secure
         true,  // HttpOnly
     )
-
+  
 	fmt.Println("Authentication successful, sending response")
 	c.Redirect(http.StatusFound, os.Getenv("CALLBACK_URL"))
 }

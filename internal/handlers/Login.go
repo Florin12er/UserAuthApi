@@ -85,16 +85,16 @@ func Login(c *gin.Context) {
 	}
 
 	// Set the cookie
-	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie(
-		"token",
-		tokenString,
-		3600*24*30, // 30 days
-		"/",
-		"",   // Leave domain empty to default to the current domain
-		true, // Secure
-		true, // HttpOnly
-	)
+    c.SetSameSite(http.SameSiteNoneMode)
+    c.SetCookie(
+        "token",
+        tokenString,
+        3600*24*30, // 30 days
+        "/",
+        "noteapi-rw35.onrender.com", // Set this to your API domain
+        true,  // Secure
+        true,  // HttpOnly
+    )
 	c.JSON(http.StatusOK, gin.H{"message": user.Username})
 }
 
