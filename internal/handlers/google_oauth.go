@@ -20,7 +20,7 @@ func GoogleAuth() {
 		google.New(
 			googleClientId,
 			googleClientSecret,
-			"http://localhost:8080/auth/google/callback",
+			"https://userauthapi-i77f.onrender.com/auth/google/callback",
 		),
 	)
 }

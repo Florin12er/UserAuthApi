@@ -27,7 +27,7 @@ func GithubAuth() {
 		github.New(
 			githubClientId,
 			githubClientSecret,
-			"http://localhost:8080/auth/github/callback",
+			"https://userauthapi-i77f.onrender.com/auth/github/callback",
 		),
 	)
 }
