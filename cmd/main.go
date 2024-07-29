@@ -51,7 +51,7 @@ func main() {
 	}
 
 	r.Use(cors.New(config))
-    r.Use(middleware.SecureCookie())
+	r.Use(middleware.SecureCookie())
 	// Apply general rate limiter to all routes
 	r.Use(middleware.RateLimiter(60, time.Minute)) // 60 requests per minute
 
@@ -61,7 +61,7 @@ func main() {
 		middleware.CheckNotAuthenticated(),
 		handlers.Login,
 	)
-	r.GET("/check-auth", handlers.CheckAuth)
+	r.GET("/check-auth", handlers.CheckAuthenticatedHandler)
 	r.POST(
 		"/register",
 		middleware.RateLimiter(10, time.Minute),
