@@ -90,7 +90,7 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600*24*30, // 30 days
 		"/",
-		"note-taking-dusky.vercel.app",
+		"userauthapi-i77f.onrender.com",
 		true,
 		true,
 	)
