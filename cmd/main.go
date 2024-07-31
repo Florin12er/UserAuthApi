@@ -64,7 +64,7 @@ func main() {
 		middleware.CheckNotAuthenticated(),
 		handlers.Login,
 	)
-	r.GET("/check-auth", handlers.CheckAuth)
+	r.GET("/check-auth", middleware.CheckAuthenticated(), handlers.CheckAuth)
 	r.POST(
 		"/register",
 		middleware.RateLimiter(10, time.Minute),
