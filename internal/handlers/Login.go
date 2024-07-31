@@ -74,7 +74,7 @@ func Login(c *gin.Context) {
 	// Create the JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
+		"exp": time.Now().Add(time.Hour * 1).Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string
@@ -88,9 +88,9 @@ func Login(c *gin.Context) {
 	c.SetCookie(
 		"token",
 		tokenString,
-		3600*24*30, // 30 days
+		3600, // 1 hour
 		"/",
-		"userauthapi-i77f.onrender.com",
+		"",
 		true,
 		true,
 	)
