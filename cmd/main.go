@@ -36,7 +36,10 @@ func main() {
 
 	// CORS configuration
 	config := cors.Config{
-		AllowOrigins: []string{"https://note-taking-dusky.vercel.app"},
+		AllowOrigins: []string{
+			"https://note-taking-dusky.vercel.app",
+			"https://noteapi-rw35.onrender.com",
+		},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			"Origin",
@@ -61,7 +64,7 @@ func main() {
 		middleware.CheckNotAuthenticated(),
 		handlers.Login,
 	)
-	r.GET("/check-auth", handlers.CheckAuthenticatedHandler)
+	r.GET("/check-auth", handlers.CheckAuth)
 	r.POST(
 		"/register",
 		middleware.RateLimiter(10, time.Minute),
