@@ -39,6 +39,7 @@ func main() {
 		AllowOrigins: []string{
 			"https://note-taking-dusky.vercel.app",
 			"https://noteapi-rw35.onrender.com",
+			"https://userauthapi-i77f.onrender.com",
 		},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
