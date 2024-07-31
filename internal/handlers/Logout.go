@@ -12,7 +12,7 @@ func Logout(c *gin.Context) {
 		"",
 		-1,
 		"/",
-		".onrender.com",
+		"userauthapi-i77f.onrender.com",
 		false, // Set to true if using HTTPS
 		true,
 	)
@@ -22,7 +22,7 @@ func Logout(c *gin.Context) {
 		"",
 		-1,
 		"/",
-		".onrender.com",
+		"userauthapi-i77f.onrender.com",
 		false, // Set to true if using HTTPS
 		true,
 	)

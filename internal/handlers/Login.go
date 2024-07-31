@@ -90,7 +90,7 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600, // 1 hour
 		"/",
-		"noteapi-rw35.onrender.com",
+		"userauthapi-i77f.onrender.com",
 		true,
 		true,
 	)

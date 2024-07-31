@@ -77,18 +77,18 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-    // Set the cookie
-    c.SetSameSite(http.SameSiteNoneMode)
-    c.SetCookie(
-        "token",
-        tokenString,
-        3600*24*30, // 30 days
-        "/",
-        "", // Set this to your API domain
-        true,  // Secure
-        true,  // HttpOnly
-    )
-  
+	// Set the cookie
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(
+		"token",
+		tokenString,
+		3600*24*30, // 30 days
+		"/",
+		"userauthapi-i77f.onrender.com", // Set this to your API domain
+		true,                            // Secure
+		true,                            // HttpOnly
+	)
+
 	fmt.Println("Authentication successful, sending response")
 	c.Redirect(http.StatusFound, os.Getenv("CALLBACK_URL"))
 }
