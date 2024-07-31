@@ -90,7 +90,7 @@ func Login(c *gin.Context) {
 		tokenString,
 		3600, // 1 hour
 		"/",
-		"",
+		"onrender.com",
 		true,
 		true,
 	)
