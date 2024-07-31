@@ -4,15 +4,16 @@ import (
 	"UserAuth/internal/database"
 	"UserAuth/internal/models"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
-	"net/http"
-	"os"
-	"time"
 )
 
 func GithubAuth() {
@@ -77,18 +78,14 @@ func CallbackHandler(c *gin.Context) {
 		return
 	}
 
-	// Set the cookie
-	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie(
-		"token",
-		tokenString,
-		3600*24*30, // 30 days
-		"/",
-		"userauthapi-i77f.onrender.com", // Set this to your API domain
-		true,                            // Secure
-		true,                            // HttpOnly
-	)
-
 	fmt.Println("Authentication successful, sending response")
-	c.Redirect(http.StatusFound, os.Getenv("CALLBACK_URL"))
+
+	// Instead of setting a cookie, we'll redirect with the token as a query parameter
+	redirectURL := fmt.Sprintf(
+		"%s?token=%s&user=%s",
+		os.Getenv("CALLBACK_URL"),
+		tokenString,
+		dbUser.Username,
+	)
+	c.Redirect(http.StatusFound, redirectURL)
 }

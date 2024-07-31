@@ -38,24 +38,17 @@ func main() {
 	config := cors.Config{
 		AllowOrigins: []string{
 			"https://note-taking-dusky.vercel.app",
-			"https://noteapi-rw35.onrender.com",
 			"https://userauthapi-i77f.onrender.com",
+			"https://noteapi-rw35.onrender.com",
 		},
-		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{
-			"Origin",
-			"Content-Type",
-			"Accept",
-			"Authorization",
-			"X-Requested-With",
-		},
-		ExposeHeaders:    []string{"Content-Length", "Content-Type", "Set-Cookie"},
-		AllowCredentials: true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: false,
 		MaxAge:           12 * time.Hour,
 	}
 
 	r.Use(cors.New(config))
-	r.Use(middleware.SecureCookie())
 	// Apply general rate limiter to all routes
 	r.Use(middleware.RateLimiter(60, time.Minute)) // 60 requests per minute
 
@@ -81,7 +74,6 @@ func main() {
 
 	// Add the remaining routes
 	r.POST("/logout", middleware.CheckAuthenticated(), handlers.Logout)
-	r.GET("/protected", middleware.CheckAuthenticated(), handlers.ProtectedRoute)
 	r.POST("/reset-password", middleware.CheckNotAuthenticated(), handlers.ResetPassword)
 	r.GET("/user", middleware.CheckAuthenticated(), handlers.GetCurrentUser)
 	r.GET("/users", middleware.CheckAuthenticated(), handlers.GetAllUsers)

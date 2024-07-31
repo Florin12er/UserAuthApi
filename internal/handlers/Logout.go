@@ -1,3 +1,5 @@
+// internal/handlers/auth_handlers.go
+
 package handlers
 
 import (
@@ -6,26 +8,5 @@ import (
 )
 
 func Logout(c *gin.Context) {
-	// Clear the token cookie
-	c.SetCookie(
-		"token",
-		"",
-		-1,
-		"/",
-		"userauthapi-i77f.onrender.com",
-		false, // Set to true if using HTTPS
-		true,
-	)
-	// Clear the user cookie
-	c.SetCookie(
-		"user",
-		"",
-		-1,
-		"/",
-		"userauthapi-i77f.onrender.com",
-		false, // Set to true if using HTTPS
-		true,
-	)
-
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

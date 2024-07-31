@@ -1,3 +1,5 @@
+// internal/handlers/auth_handlers.go
+
 package handlers
 
 import (
@@ -74,7 +76,7 @@ func Login(c *gin.Context) {
 	// Create the JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
-		"exp": time.Now().Add(time.Hour * 1).Unix(),
+		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // 30 days
 	})
 
 	// Sign and get the complete encoded token as a string
@@ -84,38 +86,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Set the token as an HTTP-only cookie
-	c.SetCookie(
-		"token",
-		tokenString,
-		3600, // 1 hour
-		"/",
-		"userauthapi-i77f.onrender.com",
-		true,
-		true,
-	)
-
-	c.JSON(http.StatusOK, gin.H{"message": user.Username})
-}
-
-func ProtectedRoute(c *gin.Context) {
-	cookie, err := c.Cookie("token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	token, err := jwt.Parse(cookie, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-
-	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Welcome to the protected route!"})
+	// Return the token in the response body
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "message": user.Username})
 }
