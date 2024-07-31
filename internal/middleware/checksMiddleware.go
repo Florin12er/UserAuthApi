@@ -3,6 +3,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -22,18 +23,14 @@ func CheckAuthenticated() gin.HandlerFunc {
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
 
 		if err != nil {
-			if ve, ok := err.(*jwt.ValidationError); ok {
-				if ve.Errors&jwt.ValidationErrorExpired != 0 {
-					c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has expired"})
-				} else {
-					c.JSON(http.StatusUnauthorized, gin.H{"error": "Token validation error"})
-				}
+			if err == jwt.ErrSignatureInvalid {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token signature"})
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			}
@@ -63,7 +60,7 @@ func CheckNotAuthenticated() gin.HandlerFunc {
 		if err == nil {
 			token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, jwt.ErrSignatureInvalid
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
 				return []byte(os.Getenv("JWT_SECRET")), nil
 			})
